@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Activity,
   LogIn,
@@ -24,6 +24,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
   const [storePassword, setStorePassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (window.location.search.includes('admin') || window.location.pathname.includes('admin')) {
+      setShowAdminModal(true);
+      setShowStoreModal(false);
+    }
+  }, []);
 
   // Easter egg: Click on "MediPOS" 5 times within 500ms intervals to open Super Admin Login
   const [clickCount, setClickCount] = useState(0);
@@ -87,18 +94,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setShowAdminModal(true);
-                  setShowStoreModal(false);
-                  setErrorMessage('');
-                }}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                title="Super Admin Portal"
-              >
-                <Shield className="size-3.5" />
-                Admin Portal
-              </button>
               <button
                 onClick={() => {
                   setShowStoreModal(true);
