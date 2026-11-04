@@ -59,49 +59,51 @@ export const StoreLayout: React.FC<StoreLayoutProps> = ({ store, onLogout }) => 
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-hidden">
-      {/* Desktop Sidebar */}
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Desktop Sticky Sidebar */}
       {!isMobile && (
-        <aside className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col z-30">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="size-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">MediPOS</span>
+        <aside className="w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col h-screen sticky top-0 flex-shrink-0 z-30 justify-between">
+          <div className="flex flex-col flex-1 overflow-y-auto min-h-0">
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="size-8 text-blue-600" />
+                <span className="text-xl font-bold text-gray-900">MediPOS</span>
+              </div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Store</p>
+              <p className="text-gray-900 font-bold truncate" title={store.storeName}>{store.storeName}</p>
             </div>
-            <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Store</p>
-            <p className="text-gray-900 font-bold truncate">{store.storeName}</p>
+
+            <nav className="flex-1 p-4 space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (item.id === 'medicines') setMedicinesFilter('all');
+                      setActiveTab(item.id);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition cursor-pointer ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-600 font-bold shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon className="size-5" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
 
-          <nav className="flex-1 p-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (item.id === 'medicines') setMedicinesFilter('all');
-                    setActiveTab(item.id);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 font-medium transition ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-600 font-bold shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="size-5" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 flex-shrink-0 bg-white">
             <button
               onClick={onLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold transition cursor-pointer"
             >
-              <LogOut className="size-5" />
+              <LogOut className="size-5 text-red-600" />
               Logout
             </button>
           </div>
@@ -120,48 +122,50 @@ export const StoreLayout: React.FC<StoreLayoutProps> = ({ store, onLogout }) => 
 
           {mobileMenuOpen && (
             <div
-              className="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl border-r border-gray-200 z-40 flex flex-col"
+              className="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl border-r border-gray-200 z-40 flex flex-col justify-between h-screen"
             >
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Activity className="size-8 text-blue-600" />
-                  <span className="text-xl font-bold text-gray-900">MediPOS</span>
+              <div className="flex flex-col flex-1 overflow-y-auto min-h-0">
+                <div className="p-6 border-b border-gray-200 flex-shrink-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="size-8 text-blue-600" />
+                    <span className="text-xl font-bold text-gray-900">MediPOS</span>
+                  </div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Store</p>
+                  <p className="text-gray-900 font-bold truncate">{store.storeName}</p>
                 </div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Store</p>
-                <p className="text-gray-900 font-bold truncate">{store.storeName}</p>
+
+                <nav className="flex-1 p-4 space-y-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          if (item.id === 'medicines') setMedicinesFilter('all');
+                          setActiveTab(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition cursor-pointer ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-600 font-bold'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <Icon className="size-5" />
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </nav>
               </div>
 
-              <nav className="flex-1 p-4">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        if (item.id === 'medicines') setMedicinesFilter('all');
-                        setActiveTab(item.id);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-2 font-medium transition ${
-                        isActive
-                          ? 'bg-blue-50 text-blue-600 font-bold'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <Icon className="size-5" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </nav>
-
-              <div className="p-4 border-t border-gray-200">
+              <div className="p-4 border-t border-gray-200 flex-shrink-0 bg-white">
                 <button
                   onClick={onLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold transition cursor-pointer"
                 >
-                  <LogOut className="size-5" />
+                  <LogOut className="size-5 text-red-600" />
                   Logout
                 </button>
               </div>
@@ -171,7 +175,7 @@ export const StoreLayout: React.FC<StoreLayoutProps> = ({ store, onLogout }) => 
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 min-w-0 min-h-screen">
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="px-8 py-4">
             <h1 className="text-2xl font-bold text-gray-900">

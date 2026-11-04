@@ -8,7 +8,6 @@ import {
   Lock,
   FileText,
   Shield,
-  KeyRound,
   Play,
   Pause,
   Volume2,
@@ -31,6 +30,7 @@ import {
   CreditCard,
   ExternalLink,
   X,
+  MessageCircle,
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -237,15 +237,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
     setActiveChapterIndex(currentIdx);
   };
 
-  const fillDemoStore = () => {
-    setStoreEmail('store@medipos.com');
-    setStorePassword('password123');
-  };
-
-  const fillDemoAdmin = () => {
-    setAdminPassword('admin');
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-blue-500 selection:text-white relative overflow-x-hidden font-sans">
       {/* Background Radial Glow Effects */}
@@ -294,9 +285,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
               <a href="#how-it-works" className="hover:text-blue-400 transition-colors">
                 Dispensary Flow
               </a>
-              <a href="#pricing" className="hover:text-blue-400 transition-colors">
-                Subscription
-              </a>
               <a href="#faq" className="hover:text-blue-400 transition-colors">
                 FAQ
               </a>
@@ -304,19 +292,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
 
             {/* Action Bar */}
             <div className="flex items-center gap-3 sm:gap-4">
-              <button
-                onClick={() => {
-                  fillDemoStore();
-                  setShowStoreModal(true);
-                  setShowAdminModal(false);
-                  setErrorMessage('');
-                }}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 text-xs text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-lg transition-colors cursor-pointer"
-                title="Quick 1-Click Demo Credentials"
+              <a
+                href="https://wa.me/923360186282?text=Hello%20Admin%2C%20I%20would%20like%20to%20request%20a%20new%20medical%20store%20account%20for%20MediPOS."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-emerald-400 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 rounded-xl transition cursor-pointer"
+                title="Chat with Super Admin on WhatsApp (+92 336 0186282)"
               >
-                <KeyRound className="size-3.5 text-amber-400" />
-                <span>Demo Account</span>
-              </button>
+                <MessageCircle className="size-3.5 text-emerald-400" />
+                <span>Request Account</span>
+              </a>
 
               <button
                 onClick={() => {
@@ -372,16 +357,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
               }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-base font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transform hover:-translate-y-0.5 transition-all cursor-pointer"
             >
-              <span>Launch Store Terminal</span>
+              <LogIn className="size-5" />
+              <span>Store Login</span>
               <ArrowRight className="size-5" />
             </button>
 
             <a
+              href="https://wa.me/923360186282?text=Hello%20Admin%2C%20I%20would%20like%20to%20request%20a%20new%20medical%20store%20account%20for%20MediPOS."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-base font-bold text-emerald-400 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 shadow-md transition-all cursor-pointer"
+            >
+              <MessageCircle className="size-5 text-emerald-400" />
+              <span>Request an Account</span>
+            </a>
+
+            <a
               href="#demo-video"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-base font-semibold text-slate-200 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/80 hover:border-slate-600 shadow-md transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl text-base font-semibold text-slate-200 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-700/80 hover:border-slate-600 shadow-md transition-all cursor-pointer"
             >
               <Play className="size-4 text-emerald-400 fill-emerald-400" />
-              <span>Watch 3-Min Walkthrough</span>
+              <span>Watch Walkthrough</span>
             </a>
           </div>
 
@@ -727,66 +723,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
         </div>
       </section>
 
-      {/* SUBSCRIPTION / PRICING TRANSPARENCY */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-4">
-            <span>Transparent Licensing</span>
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
-            Simple Monthly Franchise Subscription
-          </h2>
-          <p className="text-slate-400 text-base sm:text-lg mb-12">
-            No percentage cuts per transaction. Fixed monthly renewal fee managed easily by your Super Admin.
-          </p>
-
-          <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 transform translate-x-8 -translate-y-8 size-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="flex flex-col sm:flex-row sm:items-baseline justify-center gap-2 mb-6">
-              <span className="text-5xl sm:text-6xl font-black text-white">Rs 1,500</span>
-              <span className="text-slate-400 font-medium">/ store / month ($49 USD)</span>
-            </div>
-
-            <p className="text-slate-300 text-sm max-w-lg mx-auto mb-8">
-              Full access for unlimited cashiers, unlimited medicine catalogs, automated 30-day expiry notifications,
-              and thermal invoice printing.
-            </p>
-
-            <div className="grid sm:grid-cols-2 gap-4 max-w-lg mx-auto text-left mb-8 text-sm text-slate-300">
-              <div className="flex items-center gap-2">
-                <Check className="size-4 text-emerald-400 shrink-0" />
-                <span>Unlimited Billing & Invoices</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="size-4 text-emerald-400 shrink-0" />
-                <span>Automated Expiry Radar</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="size-4 text-emerald-400 shrink-0" />
-                <span>Dynamic Custom Categories</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="size-4 text-emerald-400 shrink-0" />
-                <span>1-Click +30D Renewal Admin</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowStoreModal(true);
-                setShowAdminModal(false);
-                setErrorMessage('');
-              }}
-              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition cursor-pointer"
-            >
-              <span>Launch Store Terminal</span>
-              <ArrowRight className="size-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* FAQ SECTION */}
       <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 relative z-10 bg-slate-900/30">
         <div className="max-w-4xl mx-auto">
@@ -880,8 +816,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
             <a href="#how-it-works" className="hover:text-white transition">
               Dispensary Flow
             </a>
-            <a href="#pricing" className="hover:text-white transition">
-              Pricing
+            <a href="#faq" className="hover:text-white transition">
+              FAQ
+            </a>
+            <a
+              href="https://wa.me/923360186282?text=Hello%20Admin%2C%20I%20would%20like%20to%20request%20a%20new%20medical%20store%20account%20for%20MediPOS."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-emerald-400 transition flex items-center gap-1.5"
+            >
+              <MessageCircle className="size-3 text-emerald-400" />
+              <span>Request Account</span>
             </a>
             <button
               onClick={() => {
@@ -938,7 +883,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
                   className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl text-white outline-none transition text-sm"
-                  placeholder="Enter admin password (demo: admin)"
+                  placeholder="Enter admin password"
                   required
                   autoFocus
                 />
@@ -950,18 +895,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
                 </div>
               )}
 
-              <div className="pt-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={fillDemoAdmin}
-                  className="px-3 py-2 text-xs text-slate-400 hover:text-slate-200 border border-slate-800 rounded-xl hover:bg-slate-800 transition cursor-pointer"
-                >
-                  Fill Demo
-                </button>
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition disabled:opacity-50 text-sm shadow-md shadow-blue-600/30 cursor-pointer"
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition disabled:opacity-50 text-sm shadow-md shadow-blue-600/30 cursor-pointer"
                 >
                   {loading ? 'Authenticating...' : 'Sign In as Admin'}
                 </button>
@@ -1007,7 +945,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
                   value={storeEmail}
                   onChange={(e) => setStoreEmail(e.target.value)}
                   className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl text-white outline-none transition text-sm"
-                  placeholder="store@medipos.com"
+                  placeholder="store@domain.com"
                   required
                   autoFocus
                 />
@@ -1033,23 +971,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
                 </div>
               )}
 
-              <div className="pt-2 flex gap-3">
-                <button
-                  type="button"
-                  onClick={fillDemoStore}
-                  className="px-3 py-2 text-xs text-slate-400 hover:text-slate-200 border border-slate-800 rounded-xl hover:bg-slate-800 transition cursor-pointer"
-                >
-                  Fill Demo
-                </button>
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition disabled:opacity-50 text-sm shadow-md shadow-blue-600/30 cursor-pointer"
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition disabled:opacity-50 text-sm shadow-md shadow-blue-600/30 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Validating Subscription...' : 'Sign In to Store'}
+                  <LogIn className="size-4" />
+                  <span>{loading ? 'Validating Subscription...' : 'Sign In to Store'}</span>
                 </button>
               </div>
             </form>
+
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="border-t border-slate-800 w-full" />
+              <span className="bg-slate-900 px-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold whitespace-nowrap">
+                Don't have an account?
+              </span>
+              <div className="border-t border-slate-800 w-full" />
+            </div>
+
+            <div>
+              <a
+                href="https://wa.me/923360186282?text=Hello%20Admin%2C%20I%20would%20like%20to%20request%20a%20new%20medical%20store%20account%20for%20MediPOS."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-emerald-600 hover:bg-emerald-500 flex items-center justify-center gap-2.5 shadow-md shadow-emerald-600/25 transition cursor-pointer"
+              >
+                <MessageCircle className="size-4" />
+                <span>Request an Account</span>
+              </a>
+              <p className="text-[11px] text-center text-slate-400 mt-2">
+                Contact Super Admin on WhatsApp: <span className="text-emerald-400 font-semibold">+92 336 0186282</span>
+              </p>
+            </div>
           </div>
         </div>
       )}
