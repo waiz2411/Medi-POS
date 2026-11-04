@@ -32,12 +32,12 @@ router.post('/login', async (req, res) => {
       }
     } else {
       const admin = memoryDb.admins.find((a) => a.username === 'admin');
-      if (admin && (admin.password === password || password === 'admin' || password === 'admin123')) {
+      if (admin && admin.password === password) {
         return res.json({ success: true, message: 'Logged in successfully' });
       }
     }
 
-    return res.status(401).json({ success: false, message: 'Invalid admin password (default: admin)' });
+    return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
   } catch (err) {
     console.error('Admin login error:', err);
     res.status(500).json({ success: false, message: 'Server error during admin login' });

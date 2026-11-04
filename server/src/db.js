@@ -5,7 +5,7 @@ dotenv.config();
 const DB_CONFIG = {
   host: process.env.DB_HOST || '82.198.229.98',
   port: parseInt(process.env.DB_PORT || '3306'),
-  user: process.env.DB_USER || 'u932536786_waiz2411',
+  user: process.env.DB_USER || 'u932536786_waiz24111',
   password: process.env.DB_PASSWORD || '&x3JnTz5*',
   database: process.env.DB_NAME || 'u932536786_Medi_POS',
   waitForConnections: true,
@@ -20,7 +20,7 @@ let isConnectedToMySQL = false;
 // In-Memory fallback store if MySQL service is not running locally
 const memoryDb = {
   admins: [
-    { id: 1, username: 'admin', password: 'admin' },
+    { id: 1, username: 'admin', password: 'MediPOS#Secure2026!Admin' },
   ],
   categories: [
     { id: 'cat-01', store_id: null, name: 'Tablet' },
@@ -360,7 +360,7 @@ async function createTablesIfNotExist() {
   // Seed default admin if table is empty
   const [admins] = await pool.query('SELECT COUNT(*) as cnt FROM admins');
   if (admins[0].cnt === 0) {
-    await pool.query('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', 'admin']);
+    await pool.query('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', 'MediPOS#Secure2026!Admin']);
   }
 
   // Seed default categories if table is empty

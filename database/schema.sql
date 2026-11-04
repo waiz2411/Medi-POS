@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `admins` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO `admins` (`id`, `username`, `password`) VALUES
-(1, 'admin', 'admin');
+(1, 'admin', 'MediPOS#Secure2026!Admin');
 
 
 -- 2. Medical Stores Table

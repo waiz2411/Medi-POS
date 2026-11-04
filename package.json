@@ -9,6 +9,7 @@
     "server": "node server/src/index.js",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "seed:db": "node scripts/seed-hostinger.js",
     "start": "node server/src/index.js"
   },
   "dependencies": {

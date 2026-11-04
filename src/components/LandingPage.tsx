@@ -34,7 +34,6 @@ import {
 } from 'lucide-react';
 
 interface LandingPageProps {
-  onAdminLogin: (password: string) => Promise<{ success: boolean; message?: string }>;
   onStoreLogin: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
 }
 
@@ -106,10 +105,8 @@ const CHAPTERS: Chapter[] = [
   },
 ];
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreLogin }) => {
-  const [showAdminModal, setShowAdminModal] = useState(false);
+export const LandingPage: React.FC<LandingPageProps> = ({ onStoreLogin }) => {
   const [showStoreModal, setShowStoreModal] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
   const [storeEmail, setStoreEmail] = useState('');
   const [storePassword, setStorePassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -124,64 +121,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
 
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-
-  // Easter egg: Click on "MediPOS" 5 times to open Super Admin Login
-  const [clickCount, setClickCount] = useState(0);
-  const [lastClickTime, setLastClickTime] = useState(0);
-
-  useEffect(() => {
-    if (
-      window.location.search.includes('admin') ||
-      window.location.pathname.includes('admin') ||
-      window.location.hash.includes('admin')
-    ) {
-      setShowAdminModal(true);
-      setShowStoreModal(false);
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Hotkey: Ctrl+Shift+A or Cmd+Shift+A to open Super Admin
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
-        e.preventDefault();
-        setShowAdminModal(true);
-        setShowStoreModal(false);
-        setErrorMessage('');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleLogoClick = () => {
-    const now = Date.now();
-    if (now - lastClickTime < 500) {
-      setClickCount((prev) => {
-        const next = prev + 1;
-        if (next === 5) {
-          setShowAdminModal(true);
-          setShowStoreModal(false);
-          setErrorMessage('');
-          return 0;
-        }
-        return next;
-      });
-    } else {
-      setClickCount(1);
-    }
-    setLastClickTime(now);
-  };
-
-  const handleAdminSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMessage('');
-    const res = await onAdminLogin(adminPassword);
-    if (!res.success) {
-      setErrorMessage(res.message || 'Invalid password');
-    }
-    setLoading(false);
-  };
 
   const handleStoreSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -252,18 +191,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <div
-                onClick={handleLogoClick}
-                className="size-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 cursor-pointer transform hover:scale-105 active:scale-95 transition-transform"
-                title="MediPOS (Click 5 times for Admin Access)"
-              >
+              <div className="size-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
                 <Activity className="size-6 text-white" />
               </div>
-              <div
-                onClick={handleLogoClick}
-                className="cursor-pointer select-none"
-                title="MediPOS (Click 5 times for Admin Access)"
-              >
+              <div className="select-none">
                 <span className="text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
                   Medi<span className="text-blue-400">POS</span>
                   <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -306,7 +237,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
               <button
                 onClick={() => {
                   setShowStoreModal(true);
-                  setShowAdminModal(false);
                   setErrorMessage('');
                 }}
                 className="relative inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-[length:200%_auto] hover:bg-right transition-all duration-300 shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 cursor-pointer"
@@ -352,7 +282,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
             <button
               onClick={() => {
                 setShowStoreModal(true);
-                setShowAdminModal(false);
                 setErrorMessage('');
               }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-xl text-base font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transform hover:-translate-y-0.5 transition-all cursor-pointer"
@@ -792,15 +721,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <div
-              onClick={handleLogoClick}
-              className="size-8 rounded-lg bg-blue-600 flex items-center justify-center cursor-pointer"
+              className="size-8 rounded-lg bg-blue-600 flex items-center justify-center"
               title="MediPOS"
             >
               <Activity className="size-4 text-white" />
             </div>
             <span
-              onClick={handleLogoClick}
-              className="text-lg font-bold text-white cursor-pointer select-none"
+              className="text-lg font-bold text-white select-none"
             >
               MediPOS <span className="text-xs text-slate-500 font-normal">v2.0</span>
             </span>
@@ -828,18 +755,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
               <MessageCircle className="size-3 text-emerald-400" />
               <span>Request Account</span>
             </a>
-            <button
-              onClick={() => {
-                setShowAdminModal(true);
-                setShowStoreModal(false);
-                setErrorMessage('');
-              }}
-              className="hover:text-amber-400 transition flex items-center gap-1 cursor-pointer"
-              title="Super Admin Portal Access"
-            >
-              <Shield className="size-3" />
-              <span>Admin Portal</span>
-            </button>
           </div>
 
           <p className="text-xs text-slate-500">
@@ -847,67 +762,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
           </p>
         </div>
       </footer>
-
-      {/* SUPER ADMIN LOGIN MODAL */}
-      {showAdminModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative text-left">
-            <button
-              onClick={() => {
-                setShowAdminModal(false);
-                setAdminPassword('');
-                setErrorMessage('');
-              }}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
-            >
-              <X className="size-5" />
-            </button>
-
-            <div className="flex items-center gap-3 mb-6">
-              <div className="size-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                <Shield className="size-5" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Super Admin Portal</h2>
-                <p className="text-xs text-slate-400">Master franchise license & store controls</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleAdminSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                  Admin Master Password
-                </label>
-                <input
-                  type="password"
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl text-white outline-none transition text-sm"
-                  placeholder="Enter admin password"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              {errorMessage && (
-                <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-300">
-                  {errorMessage}
-                </div>
-              )}
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl transition disabled:opacity-50 text-sm shadow-md shadow-blue-600/30 cursor-pointer"
-                >
-                  {loading ? 'Authenticating...' : 'Sign In as Admin'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* STORE LOGIN MODAL */}
       {showStoreModal && (
