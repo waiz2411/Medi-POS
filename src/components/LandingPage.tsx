@@ -130,10 +130,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
   const [lastClickTime, setLastClickTime] = useState(0);
 
   useEffect(() => {
-    if (window.location.search.includes('admin') || window.location.pathname.includes('admin')) {
+    if (
+      window.location.search.includes('admin') ||
+      window.location.pathname.includes('admin') ||
+      window.location.hash.includes('admin')
+    ) {
       setShowAdminModal(true);
       setShowStoreModal(false);
     }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Hotkey: Ctrl+Shift+A or Cmd+Shift+A to open Super Admin
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        setShowAdminModal(true);
+        setShowStoreModal(false);
+        setErrorMessage('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleLogoClick = () => {

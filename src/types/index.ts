@@ -95,3 +95,24 @@ export interface ApiResponse<T = any> {
   data?: T;
   [key: string]: any;
 }
+
+export interface StoreActivityLog {
+  id: string;
+  storeId: string;
+  storeName: string;
+  action: string;
+  ipAddress: string;
+  location: string;
+  device: string;
+  browser: string;
+  status: 'success' | 'failed' | 'blocked_expired' | 'blocked_inactive' | 'blocked_pending' | string;
+  createdAt: string;
+}
+
+export interface ActivityStats {
+  totalLogins: number;
+  successfulLogins: number;
+  failedLogins: number;
+  blockedLogins: number;
+  uniqueStoresActiveToday: number;
+}

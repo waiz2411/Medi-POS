@@ -1,5 +1,6 @@
 import express from 'express';
 import { pool, isConnectedToMySQL, memoryDb, checkAndUpdateStoreExpiries } from '../db.js';
+import { parseUserAgent, getLocationFromIp, recordStoreActivity } from '../utils/activity.js';
 
 const router = express.Router();
 
@@ -43,6 +44,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email and password are required' });
     }
 
+    // Extract device, IP, and location
+    const ipHeader = req.headers['x-forwarded-for'];
+    const ip = (typeof ipHeader === 'string' ? ipHeader.split(',')[0].trim() : null) || req.socket?.remoteAddress || req.ip || '127.0.0.1';
+    const ua = req.headers['user-agent'] || '';
+    const { device, browser } = parseUserAgent(ua);
+    const location = await getLocationFromIp(ip);
+
     checkAndUpdateStoreExpiries();
     const today = new Date().toISOString().split('T')[0];
 
@@ -56,11 +64,31 @@ router.post('/login', async (req, res) => {
     }
 
     if (!storeRow) {
+      await recordStoreActivity({
+        storeId: 'unregistered',
+        storeName: email.trim(),
+        action: 'LOGIN_FAILED',
+        ip,
+        location,
+        device,
+        browser,
+        status: 'failed',
+      });
       return res.status(401).json({ success: false, error: 'Invalid email or password' });
     }
 
     // Verify Password
     if (storeRow.password !== password) {
+      await recordStoreActivity({
+        storeId: storeRow.id,
+        storeName: storeRow.store_name,
+        action: 'LOGIN_FAILED',
+        ip,
+        location,
+        device,
+        browser,
+        status: 'failed',
+      });
       return res.status(401).json({ success: false, error: 'Invalid email or password' });
     }
 
@@ -72,6 +100,18 @@ router.post('/login', async (req, res) => {
         await pool.query("UPDATE stores SET status = 'inactive' WHERE id = ?", [storeRow.id]);
       }
       storeRow.status = 'inactive';
+
+      await recordStoreActivity({
+        storeId: storeRow.id,
+        storeName: storeRow.store_name,
+        action: 'LOGIN_BLOCKED',
+        ip,
+        location,
+        device,
+        browser,
+        status: 'blocked_expired',
+      });
+
       return res.status(403).json({
         success: false,
         error: `Your store subscription expired on ${expiry}. Please contact the Super Admin for renewal.`,
@@ -80,11 +120,34 @@ router.post('/login', async (req, res) => {
 
     // Block if status is inactive, pending, or expired
     if (storeRow.status === 'inactive' || storeRow.status === 'pending' || storeRow.status === 'expired') {
+      await recordStoreActivity({
+        storeId: storeRow.id,
+        storeName: storeRow.store_name,
+        action: 'LOGIN_BLOCKED',
+        ip,
+        location,
+        device,
+        browser,
+        status: storeRow.status === 'pending' ? 'blocked_pending' : 'blocked_inactive',
+      });
+
       return res.status(403).json({
         success: false,
         error: `Store account is currently ${storeRow.status.toUpperCase()}. Access denied. Please contact the Super Admin.`,
       });
     }
+
+    // Success login
+    await recordStoreActivity({
+      storeId: storeRow.id,
+      storeName: storeRow.store_name,
+      action: 'LOGIN',
+      ip,
+      location,
+      device,
+      browser,
+      status: 'success',
+    });
 
     const formatted = formatStore(storeRow);
     return res.json({ success: true, store: formatted });

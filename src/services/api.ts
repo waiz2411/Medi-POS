@@ -6,6 +6,8 @@ import {
   Bill,
   BillItem,
   Analytics,
+  StoreActivityLog,
+  ActivityStats,
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -239,6 +241,52 @@ export const api = {
         weekSales: 0,
         topMedicines: [],
         recentBills: [],
+      };
+    }
+  },
+
+  // Store Activity Logs & Device Audits
+  async getStoreActivities(params?: {
+    storeId?: string;
+    status?: string;
+    limit?: number;
+  }): Promise<StoreActivityLog[]> {
+    try {
+      const searchParams = new URLSearchParams();
+      if (params?.storeId) searchParams.append('storeId', params.storeId);
+      if (params?.status) searchParams.append('status', params.status);
+      if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+      const res = await fetch(`${API_BASE}/admin/activities?${searchParams.toString()}`);
+      const data = await res.json();
+      return data.activities || [];
+    } catch (err) {
+      console.error('Get store activities error:', err);
+      return [];
+    }
+  },
+
+  async getActivityStats(): Promise<ActivityStats> {
+    try {
+      const res = await fetch(`${API_BASE}/admin/activities/stats`);
+      const data = await res.json();
+      return (
+        data.stats || {
+          totalLogins: 0,
+          successfulLogins: 0,
+          failedLogins: 0,
+          blockedLogins: 0,
+          uniqueStoresActiveToday: 0,
+        }
+      );
+    } catch (err) {
+      console.error('Get activity stats error:', err);
+      return {
+        totalLogins: 0,
+        successfulLogins: 0,
+        failedLogins: 0,
+        blockedLogins: 0,
+        uniqueStoresActiveToday: 0,
       };
     }
   },

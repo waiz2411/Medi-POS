@@ -16,8 +16,16 @@ import {
   XCircle,
   KeyRound,
   Filter,
+  Globe,
+  Monitor,
+  Smartphone,
+  Tablet,
+  RefreshCw,
+  Copy,
+  Check,
+  ShieldAlert,
 } from 'lucide-react';
-import { Store, StoreFormData, StoreStatus } from '../types';
+import { Store, StoreFormData, StoreStatus, StoreActivityLog, ActivityStats } from '../types';
 import { api } from '../services/api';
 
 interface AdminDashboardProps {
@@ -33,6 +41,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expiring-soon' | 'expired' | 'pending'>('all');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Tab State: 'stores' | 'activities'
+  const [activeTab, setActiveTab] = useState<'stores' | 'activities'>('stores');
+
+  // Activities State
+  const [activities, setActivities] = useState<StoreActivityLog[]>([]);
+  const [activityStats, setActivityStats] = useState<ActivityStats | null>(null);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+  const [activitySearch, setActivitySearch] = useState('');
+  const [activityStoreFilter, setActivityStoreFilter] = useState('all');
+  const [activityStatusFilter, setActivityStatusFilter] = useState('all');
+  const [copiedIp, setCopiedIp] = useState<string | null>(null);
 
   const defaultNextMonth = () => {
     const d = new Date();
@@ -54,6 +74,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   useEffect(() => {
     fetchStores();
+    fetchActivities();
   }, []);
 
   const fetchStores = async () => {
@@ -65,6 +86,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       console.error('Fetch stores error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActivities = async () => {
+    try {
+      setLoadingActivities(true);
+      const [data, stats] = await Promise.all([
+        api.getStoreActivities(),
+        api.getActivityStats(),
+      ]);
+      setActivities(data || []);
+      setActivityStats(stats);
+    } catch (err) {
+      console.error('Fetch activities error:', err);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIp(text);
+    setTimeout(() => setCopiedIp(null), 2000);
+  };
+
+  const formatRelativeTime = (isoString?: string) => {
+    if (!isoString) return 'Just now';
+    try {
+      const date = new Date(isoString);
+      const now = new Date();
+      const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+      if (diffSec < 60) return 'Just now';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHours = Math.floor(diffMin / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays}d ago`;
+    } catch {
+      return 'Recent';
     }
   };
 
@@ -195,34 +256,100 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     return matchesSearch && matchesFilter;
   });
 
+  // Filter activities
+  const filteredActivities = activities.filter((act) => {
+    const term = activitySearch.toLowerCase();
+    const matchesSearch =
+      (act.storeName || '').toLowerCase().includes(term) ||
+      (act.ipAddress && act.ipAddress.toLowerCase().includes(term)) ||
+      (act.location && act.location.toLowerCase().includes(term)) ||
+      (act.device && act.device.toLowerCase().includes(term)) ||
+      (act.browser && act.browser.toLowerCase().includes(term));
+
+    let matchesStore = true;
+    if (activityStoreFilter !== 'all') {
+      matchesStore = act.storeId === activityStoreFilter;
+    }
+
+    let matchesStatus = true;
+    if (activityStatusFilter === 'success') {
+      matchesStatus = act.status === 'success';
+    } else if (activityStatusFilter === 'failed') {
+      matchesStatus = act.status === 'failed';
+    } else if (activityStatusFilter === 'blocked') {
+      matchesStatus = (act.status || '').startsWith('blocked');
+    }
+
+    return matchesSearch && matchesStore && matchesStatus;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Super Admin Top Header */}
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-gray-900 text-white rounded-lg">
                 <Activity className="size-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Super Admin Portal</h1>
-                <p className="text-xs text-gray-500 font-medium">Complete Store Subscriptions & Account Control</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Super Admin Portal</h1>
+                <p className="text-xs text-gray-500 font-medium">Complete Store Subscriptions, Security & Activity Control</p>
               </div>
             </div>
             <button
               onClick={onLogout}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm cursor-pointer"
             >
               <LogOut className="size-4" /> Logout
             </button>
           </div>
         </div>
+
+        {/* Navigation Tabs */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100 flex gap-4">
+          <button
+            onClick={() => setActiveTab('stores')}
+            className={`py-3 px-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition cursor-pointer ${
+              activeTab === 'stores'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <StoreIcon className="size-4" />
+            <span>Medical Stores & Subscriptions</span>
+            <span className="ml-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700 font-bold">
+              {stores.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('activities');
+              fetchActivities();
+            }}
+            className={`py-3 px-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition cursor-pointer ${
+              activeTab === 'activities'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ShieldCheck className="size-4" />
+            <span>Store Activity & Device Logs</span>
+            <span className="relative flex h-2 w-2 ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+          </button>
+        </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* KPI Cards: Total, Active, Expiring Soon, Expired */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {activeTab === 'stores' ? (
+          <>
+            {/* KPI Cards: Total, Active, Expiring Soon, Expired */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div
             onClick={() => setStatusFilter('all')}
             className={`p-6 rounded-xl shadow-sm border cursor-pointer transition ${
@@ -524,6 +651,293 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             </div>
           )}
         </div>
+      </>
+    ) : (
+      <div className="space-y-8">
+        {/* Activity KPI Cards */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="p-6 rounded-xl shadow-sm border bg-white border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Activity className="size-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Total Login Events</p>
+                <p className="text-2xl font-bold text-gray-900">{activityStats?.totalLogins ?? activities.length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-xl shadow-sm border bg-white border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-100 rounded-lg">
+                <CheckCircle2 className="size-6 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Authorized Sessions</p>
+                <p className="text-2xl font-bold text-emerald-600">
+                  {activityStats?.successfulLogins ?? activities.filter((a) => a.status === 'success').length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-xl shadow-sm border bg-white border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-rose-100 rounded-lg">
+                <ShieldAlert className="size-6 text-rose-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Blocked / Failed</p>
+                <p className="text-2xl font-bold text-rose-600">
+                  {(activityStats?.blockedLogins || 0) + (activityStats?.failedLogins || 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-xl shadow-sm border bg-white border-gray-200">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <StoreIcon className="size-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Stores Active Today</p>
+                <p className="text-2xl font-bold text-purple-600">{activityStats?.uniqueStoresActiveToday ?? 0}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Activity Logs Table Container */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Store Activity & Device Audit</h2>
+                <p className="text-sm text-gray-500">Live feed of store sign-ins, IP addresses, geographical locations, and device footprints</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={fetchActivities}
+                  disabled={loadingActivities}
+                  className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition disabled:opacity-50 cursor-pointer"
+                >
+                  <RefreshCw className={`size-4 ${loadingActivities ? 'animate-spin' : ''}`} />
+                  <span>Refresh Logs</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-gray-100">
+              {/* Search */}
+              <div className="relative md:col-span-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={activitySearch}
+                  onChange={(e) => setActivitySearch(e.target.value)}
+                  placeholder="Search IP, store, location, device..."
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                />
+              </div>
+
+              {/* Store Filter */}
+              <div>
+                <select
+                  value={activityStoreFilter}
+                  onChange={(e) => setActivityStoreFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white"
+                >
+                  <option value="all">All Medical Stores</option>
+                  {stores.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.storeName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <select
+                  value={activityStatusFilter}
+                  onChange={(e) => setActivityStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-white"
+                >
+                  <option value="all">All Activity Statuses</option>
+                  <option value="success">Authorized Logins Only</option>
+                  <option value="failed">Failed Credentials</option>
+                  <option value="blocked">Blocked / Expired Attempts</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {loadingActivities ? (
+            <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center gap-3">
+              <RefreshCw className="size-8 animate-spin text-blue-500" />
+              <p className="text-sm font-medium">Loading live store activity logs...</p>
+            </div>
+          ) : filteredActivities.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">
+              <ShieldCheck className="size-12 text-gray-300 mx-auto mb-3" />
+              <p className="font-semibold text-gray-800">No activity logs found</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {activitySearch || activityStoreFilter !== 'all' || activityStatusFilter !== 'all'
+                  ? 'Try adjusting your search terms or filters.'
+                  : 'Activity logs will appear automatically whenever a medical store signs in.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3.5">Store / Account</th>
+                    <th className="px-6 py-3.5">Auth Status</th>
+                    <th className="px-6 py-3.5">IP Address</th>
+                    <th className="px-6 py-3.5">Geographic Location</th>
+                    <th className="px-6 py-3.5">Device & OS</th>
+                    <th className="px-6 py-3.5">Browser</th>
+                    <th className="px-6 py-3.5 text-right">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredActivities.map((act) => {
+                    const isSuccess = act.status === 'success';
+                    const isExpired = act.status === 'blocked_expired';
+                    const isInactive = act.status === 'blocked_inactive';
+                    const isPending = act.status === 'blocked_pending';
+                    const isFailed = act.status === 'failed';
+
+                    return (
+                      <tr key={act.id} className="hover:bg-gray-50 transition-colors">
+                        {/* Store Name & ID */}
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-semibold text-gray-900">{act.storeName}</p>
+                            <span className="text-[11px] font-mono text-gray-400">
+                              {act.storeId}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Auth Status */}
+                        <td className="px-6 py-4">
+                          {isSuccess && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="size-3.5 text-emerald-600" />
+                              Authorized
+                            </span>
+                          )}
+                          {isExpired && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                              <XCircle className="size-3.5 text-rose-600" />
+                              Expired Blocked
+                            </span>
+                          )}
+                          {isInactive && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-300">
+                              <XCircle className="size-3.5 text-gray-500" />
+                              Inactive Blocked
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                              <Clock className="size-3.5 text-purple-600" />
+                              Pending Blocked
+                            </span>
+                          )}
+                          {isFailed && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                              <AlertTriangle className="size-3.5 text-amber-600" />
+                              Wrong Password
+                            </span>
+                          )}
+                          {!isSuccess && !isExpired && !isInactive && !isPending && !isFailed && (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                              {act.status}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* IP Address */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                              {act.ipAddress}
+                            </span>
+                            <button
+                              onClick={() => copyToClipboard(act.ipAddress)}
+                              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition cursor-pointer"
+                              title="Copy IP address"
+                            >
+                              {copiedIp === act.ipAddress ? (
+                                <Check className="size-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="size-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+
+                        {/* Geographic Location */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1.5 text-gray-700">
+                            <Globe className="size-4 text-blue-500 flex-shrink-0" />
+                            <span className="truncate max-w-[180px] font-medium" title={act.location}>
+                              {act.location}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Device & OS */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-gray-700">
+                            {act.device.toLowerCase().includes('mobile') ? (
+                              <Smartphone className="size-4 text-purple-500 flex-shrink-0" />
+                            ) : act.device.toLowerCase().includes('tablet') ? (
+                              <Tablet className="size-4 text-indigo-500 flex-shrink-0" />
+                            ) : (
+                              <Monitor className="size-4 text-slate-600 flex-shrink-0" />
+                            )}
+                            <span className="text-xs font-medium text-gray-800">
+                              {act.device}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Browser */}
+                        <td className="px-6 py-4">
+                          <span className="inline-block px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                            {act.browser}
+                          </span>
+                        </td>
+
+                        {/* Timestamp */}
+                        <td className="px-6 py-4 text-right">
+                          <span
+                            className="text-xs text-gray-600 font-medium cursor-help"
+                            title={act.createdAt ? new Date(act.createdAt).toLocaleString() : ''}
+                          >
+                            {formatRelativeTime(act.createdAt)}
+                          </span>
+                          <p className="text-[10px] text-gray-400">
+                            {act.createdAt ? new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                          </p>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
       </div>
 
       {/* Add Store Modal */}

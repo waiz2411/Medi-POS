@@ -3,14 +3,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const DB_CONFIG = {
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || '82.198.229.98',
   port: parseInt(process.env.DB_PORT || '3306'),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'medipos_db',
+  user: process.env.DB_USER || 'u932536786_waiz2411',
+  password: process.env.DB_PASSWORD || '&x3JnTz5*',
+  database: process.env.DB_NAME || 'u932536786_Medi_POS',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  connectTimeout: 8000,
 };
 
 let pool = null;
@@ -157,6 +158,44 @@ const memoryDb = {
     { id: 2, bill_id: 'bill-20261101-001', medicine_id: 'med-02', name: 'Amoxicillin 500mg', quantity: 1, price: 85.5, subtotal: 85.5 },
     { id: 3, bill_id: 'bill-20261101-001', medicine_id: 'med-04', name: 'Cough Relief Formula 100ml', quantity: 1, price: 110.0, subtotal: 110.0 },
   ],
+  activityLogs: [
+    {
+      id: 'act-demo-1',
+      store_id: 'store-demo-01',
+      store_name: 'City Care Pharmacy',
+      action: 'LOGIN',
+      ip_address: '103.255.4.18',
+      location: 'New York, US',
+      device: 'Desktop • Windows 10/11',
+      browser: 'Google Chrome',
+      status: 'success',
+      created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'act-demo-2',
+      store_id: 'store-demo-02',
+      store_name: 'Apollo MedPlus Express',
+      action: 'LOGIN',
+      ip_address: '82.198.229.98',
+      location: 'Frankfurt, DE',
+      device: 'Mobile • iOS (iPhone)',
+      browser: 'Apple Safari',
+      status: 'success',
+      created_at: new Date(Date.now() - 48 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'act-demo-3',
+      store_id: 'store-demo-03',
+      store_name: 'Metro Cure Drugs',
+      action: 'LOGIN',
+      ip_address: '185.120.77.4',
+      location: 'London, GB',
+      device: 'Desktop • macOS',
+      browser: 'Mozilla Firefox',
+      status: 'blocked_expired',
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+  ],
 };
 
 // Auto check and update expired stores
@@ -179,18 +218,7 @@ export function checkAndUpdateStoreExpiries() {
 
 export async function initDb() {
   try {
-    // Attempt connection to MySQL server
-    const connection = await mysql.createConnection({
-      host: DB_CONFIG.host,
-      port: DB_CONFIG.port,
-      user: DB_CONFIG.user,
-      password: DB_CONFIG.password,
-    });
-
-    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${DB_CONFIG.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-    await connection.end();
-
-    // Create pooled connection
+    // Connect directly to configured database
     pool = mysql.createPool(DB_CONFIG);
     await pool.query('SELECT 1');
 
@@ -201,6 +229,28 @@ export async function initDb() {
     await createTablesIfNotExist();
     checkAndUpdateStoreExpiries();
   } catch (err) {
+    // If database does not exist locally, attempt create
+    if (err.code === 'ER_BAD_DB_ERROR') {
+      try {
+        const rootConn = await mysql.createConnection({
+          host: DB_CONFIG.host,
+          port: DB_CONFIG.port,
+          user: DB_CONFIG.user,
+          password: DB_CONFIG.password,
+        });
+        await rootConn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_CONFIG.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+        await rootConn.end();
+        pool = mysql.createPool(DB_CONFIG);
+        await pool.query('SELECT 1');
+        isConnectedToMySQL = true;
+        console.log(`✅ [MySQL] Created and connected to database '${DB_CONFIG.database}'`);
+        await createTablesIfNotExist();
+        checkAndUpdateStoreExpiries();
+        return;
+      } catch (e) {
+        // Fall through
+      }
+    }
     isConnectedToMySQL = false;
     console.warn(`⚠️ [MySQL] Could not connect to MySQL server (${err.message}).`);
     console.log(`ℹ️ [Database] Running in Fallback Storage Mode. Once your MySQL database is active, configure .env to automatically connect.`);
@@ -290,6 +340,23 @@ async function createTablesIfNotExist() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS store_activity_logs (
+      id VARCHAR(64) PRIMARY KEY,
+      store_id VARCHAR(64) NOT NULL,
+      store_name VARCHAR(255) NOT NULL,
+      action VARCHAR(50) NOT NULL DEFAULT 'LOGIN',
+      ip_address VARCHAR(64) DEFAULT NULL,
+      location VARCHAR(150) DEFAULT NULL,
+      device VARCHAR(100) DEFAULT NULL,
+      browser VARCHAR(100) DEFAULT NULL,
+      status VARCHAR(50) DEFAULT 'success',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_activity_store (store_id),
+      INDEX idx_activity_time (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
   // Seed default admin if table is empty
   const [admins] = await pool.query('SELECT COUNT(*) as cnt FROM admins');
   if (admins[0].cnt === 0) {
@@ -323,6 +390,18 @@ async function createTablesIfNotExist() {
         INSERT INTO medicines (id, store_id, name, category, price, stock, expiry_date, description)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `, [m.id, m.store_id, m.name, m.category, m.price, m.stock, m.expiry_date, m.description]);
+    }
+  }
+
+  // Seed initial activities if empty
+  const [activities] = await pool.query('SELECT COUNT(*) as cnt FROM store_activity_logs');
+  if (activities[0].cnt === 0 && memoryDb.activityLogs) {
+    for (const a of memoryDb.activityLogs) {
+      await pool.query(
+        `INSERT IGNORE INTO store_activity_logs (id, store_id, store_name, action, ip_address, location, device, browser, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [a.id, a.store_id, a.store_name, a.action, a.ip_address, a.location, a.device, a.browser, a.status, a.created_at]
+      );
     }
   }
 }
