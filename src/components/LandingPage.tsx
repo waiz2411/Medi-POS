@@ -54,55 +54,55 @@ const CHAPTERS: Chapter[] = [
     time: 0,
     tag: '0:00',
     badge: 'Security',
-    desc: 'Secure store login with real-time active subscription check and isolated pharmacy database access.',
+    desc: 'Secure store login with real-time active subscription check and WhatsApp account onboarding.',
   },
   {
     id: 2,
     title: 'Store Dashboard',
-    time: 21,
-    tag: '0:21',
+    time: 57,
+    tag: '0:57',
     badge: 'Analytics',
-    desc: 'Live daily revenue, total sales count, operational warning badges, and 1-click POS terminal launcher.',
+    desc: 'Live daily revenue, warning cards, sticky sidebar navigation, and 1-click POS terminal launcher.',
   },
   {
     id: 3,
     title: 'Smart Stock Filters',
-    time: 35,
-    tag: '0:35',
+    time: 72,
+    tag: '1:12',
     badge: 'Inventory',
     desc: 'Instantly isolate medicines below 10 units or expiring within 30 days to avoid emergency stockouts.',
   },
   {
     id: 4,
     title: 'Add Medicine & Categories',
-    time: 51,
-    tag: '0:51',
+    time: 85,
+    tag: '1:25',
     badge: 'Catalog',
     desc: 'Register stock and create custom categories on the fly with automatic batch expiration tracking.',
   },
   {
     id: 5,
     title: 'Rapid POS Billing',
-    time: 86,
-    tag: '1:26',
+    time: 116,
+    tag: '1:56',
     badge: 'Dispensary',
     desc: 'Fast walk-in checkout — customer name and phone are 100% optional for rush-hour dispensary speed.',
   },
   {
     id: 6,
     title: 'Bill History & Invoices',
-    time: 108,
-    tag: '1:48',
+    time: 136,
+    tag: '2:16',
     badge: 'Audit',
     desc: 'Search past transactions by customer or invoice ID and reprint itemized thermal/A4 receipts in one click.',
   },
   {
     id: 7,
-    title: 'Super Admin Franchise Portal',
-    time: 124,
-    tag: '2:04',
-    badge: 'Franchise',
-    desc: 'Franchise oversight, subscription countdown badges, auto-inactivation upon expiry, and 1-click renewals.',
+    title: 'Admin & Store Audit Logs',
+    time: 150,
+    tag: '2:30',
+    badge: 'Security Audit',
+    desc: 'Franchise oversight, subscription renewals, and real-time IP, device, browser & location audit logs.',
   },
 ];
 
@@ -223,7 +223,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
     const cur = videoRef.current.currentTime;
-    const dur = videoRef.current.duration || 182;
+    const dur = videoRef.current.duration || 205;
     setVideoProgress((cur / dur) * 100);
 
     // Sync chapter highlight
@@ -509,7 +509,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onAdminLogin, onStoreL
                   Jump Directly to Chapter
                 </span>
                 <span className="text-xs text-slate-500 font-mono">
-                  {CHAPTERS[activeChapterIndex]?.tag} / 3:02
+                  {CHAPTERS[activeChapterIndex]?.tag} / 3:25
                 </span>
               </div>
 

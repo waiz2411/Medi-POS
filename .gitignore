@@ -29,6 +29,7 @@ tutorial_video/screen_studio/chapters/
 tutorial_video/screen_studio/raw_videos/
 tutorial_video/screen_studio/test_out/
 tutorial_video/screen_studio/*.wav
+tutorial_video/screen_studio/*.webm
 tutorial_video/screen_studio/video_merged.mp4
 tutorial_video/screen_studio/chapters_concat.txt
 

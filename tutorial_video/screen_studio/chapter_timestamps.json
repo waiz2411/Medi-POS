@@ -1,0 +1,30 @@
+[
+  {
+    "chapter": "ch1_login",
+    "time": 0
+  },
+  {
+    "chapter": "ch2_dashboard",
+    "time": 57
+  },
+  {
+    "chapter": "ch3_inventory_filters",
+    "time": 72
+  },
+  {
+    "chapter": "ch4_add_medicine",
+    "time": 85
+  },
+  {
+    "chapter": "ch5_rapid_billing",
+    "time": 116
+  },
+  {
+    "chapter": "ch6_bills_history",
+    "time": 136
+  },
+  {
+    "chapter": "ch7_super_admin",
+    "time": 150
+  }
+]
